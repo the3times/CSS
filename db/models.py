@@ -1,153 +1,126 @@
-import os, pickle, uuid
-from conf.settings import DB_USER_DIR
+from conf.settings import INIT_PWD
+from db import db_handle
+from lib.tools import hash_md5
 
+
+class Human:
+    def __init__(self, name):
+        self.name = name
+        self.pwd = hash_md5(INIT_PWD)
+
+
+    def edit_profile(self):
+        pass
 
 
 class FileMixin:
-
     @classmethod
     def get_obj(cls, name):
-        file_path = os.path.join(DB_USER_DIR, cls.__name__, f'{name}.pkl')
-        if os.path.isfile(file_path):
-            with open(file_path, 'rb') as f:
-                return pickle.load(f)
+        obj = db_handle.get_obj(cls, name)
+        return obj
+
+    def save_obj(self):
+        db_handle.save_obj(self)
 
 
-    def save_obj(self, obj):
-        file_dir = os.path.join(DB_USER_DIR, self.__class__.__name__)
-        if not os.path.isdir(file_dir):
-            os.mkdir(file_dir)
-        file_path = os.path.join(file_dir, f'{obj.name}.pkl')
-        with open(file_path, 'wb') as f:
-            pickle.dump(obj, f)
 
+class Admin(FileMixin, Human):
+    def __init__(self, name):
+        super().__init__(name)
+        self.save_obj()
 
-class Admin(FileMixin):
-    def __init__(self, name, pwd):
-        self.name = name
-        self.pwd = pwd
-        self.save_obj(self)
+    def create_school(self, school_name, school_addr):
+        School(school_name, school_addr)
+
+    def create_course(self, school_obj, course_name, course_period, course_price):
+        Course(course_name, course_period, course_price)
+        school_obj.relate_course(course_name)
+
+    def create_teacher(self, teacher_name):
+        Teacher(teacher_name)
+
+    def create_student(self, stu_name):
+        Student(stu_name)
+
 
 
 class School(FileMixin):
     def __init__(self, name, addr):
         self.name = name
         self.addr = addr
-        self.id = str(uuid.uuid4())
-        self.class_list = []
-        self.teacher_list = []
         self.course_list = []
-        self.save_obj(self)
+        self.save_obj()
 
-    def __str__(self):
-        txt_info = f'{self.name.center(50, "-")}\n' \
-                   f'班级：{",".join(self.class_list)}\n' \
-                   f'讲师：{",".join(self.teacher_list)}\n' \
-                   f'课程：{",".join(self.course_list)}\n'
-        return txt_info
-
-    def create_class(self, class_name):
-        Class(self.name, class_name)
-        self.class_list.append(class_name)
-        self.save_obj(self)
-
-    def create_course(self, course_name, period, price):
-        Course(course_name, period, price)
-        self.course_list.append(course_name)
-        self.save_obj(self)
-
-
-class Class(FileMixin):
-    def __init__(self, sch_name, class_name):
-        self.name = class_name
-        self.sch_name = sch_name
-        self.course_list = []
-        self.teacher_list = []
-        self.student_list = []
-        self.save_obj(self)
-
-    def __str__(self):
-        txt_info = f'{self.name.center(50, "-")}\n' \
-                   f'校区：{self.sch_name}\n' \
-                   f'课程：{",".join(self.course_list)}\n' \
-                   f'讲师：{",".join(self.teacher_list)}\n' \
-                   f'学生：{",".join(self.student_list)}\n'
-        return txt_info
 
     def relate_course(self, course_name):
         self.course_list.append(course_name)
-        self.save_obj(self)
-
-    def relate_student(self, stu_name):
-        self.student_list.append(stu_name)
-        self.save_obj(self)
+        self.save_obj()
 
 
 
 class Course(FileMixin):
-    def __init__(self, course_name, period, price):
-        self.name = course_name
+    def __init__(self, name, period, price):
+        self.name = name
         self.period = period
         self.price = price
-        self.save_obj(self)
+        self.student_list = []
+        self.save_obj()
 
-    def __str__(self):
-        return f'课程：{self.name} 周期：{self.period}月 价格：{self.price}元'
+    def relate_stu(self, stu_name):
+        self.student_list.append(stu_name)
+        self.save_obj()
 
-
-class Teacher(FileMixin):
-    def __init__(self, sch_name, teacher_name, level, pwd):
-        self.name = teacher_name
-        self.pwd = pwd
-        self.level = level
-        self.sch_name = sch_name
-        self.class_list = []
-        self.save_obj(self)
-
-    def __str__(self):
-        txt_info = f'{self.name.center(50, "-")}\n' \
-                   f'等级：{self.level}\n' \
-                   f'学校：{self.sch_name}\n' \
-                   f'班级：{",".join(self.class_list)}\n'
-        return txt_info
+    def get_stu_list(self):
+        return self.student_list
 
 
-class Student(FileMixin):
-    def __init__(self, sch_name, class_name, stu_name, age, sex, pwd):
-        self.sch_name = sch_name
-        self.class_name = class_name
-        self.name = stu_name
-        self.age = age
-        self.sex = sex
-        self.pwd = pwd
-        self.score = None
-        self.__is_pay_tuition = False
-        self.course = []
-        self.save_obj(self)
-
-    def __str__(self):
-        txt_info = f'{self.name.center(50, "-")}\n' \
-                   f'年龄：{self.age}\n' \
-                   f'性别：{self.sex}\n' \
-                   f'课程：{self.course}\n' \
-                   f'分数：{",".join(self.score)}\n'
-        return txt_info
+class Teacher(FileMixin, Human):
+    def __init__(self, name):
+        super().__init__(name)
+        self.course = None
+        self.save_obj()
 
 
     def select_course(self, course_name):
-        self.course.append(course_name)
-        self.save_obj(self)
+        self.course = course_name
+        self.save_obj()
+
+    def get_my_course(self):
+        return self.course
+
+    def get_my_student_list(self):
+        if self.course:
+            return Course.get_obj(self.get_my_course()).student_list
+
+    def set_score(self, stu_name, score):
+        stu_obj = Student.get_obj(stu_name)
+        stu_obj.score[self.course] = score
+        stu_obj.save_obj()
 
 
-    @property
-    def is_pay_tuition(self):
-        return self.__is_pay_tuition
 
 
-    def pay_tuition(self, amounts):
-        if amounts > 20000:
-            self.__is_pay_tuition = True
-            self.save_obj(self)
-            return True, '缴费成功'
-        else:
-            return False, '缴费金额不足20000'
+
+
+class Student(FileMixin, Human):
+    def __init__(self, name):
+        super().__init__(name)
+        self.school = None
+        self.course_list = []
+        self.score = {}
+        self.save_obj()
+
+
+    def select_school(self, school_name):
+        if not self.school:
+            self.school = school_name
+            self.save_obj()
+
+
+    def select_course(self, course_name):
+        self.course_list.append(course_name)
+        self.score[course_name] = None
+        self.save_obj()
+        course_obj = Course.get_obj(course_name)
+        course_obj.relate_stu(self.name)
+

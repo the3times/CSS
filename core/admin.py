@@ -1,158 +1,131 @@
-from lib.tools import hash_md5, auth
-from interface.admin_interface import register_interface
-from interface.admin_interface import login_interface
-from interface.admin_interface import create_school_interface
-from interface.admin_interface import create_class_interface
-from interface.admin_interface import create_course_interface
-from interface.admin_interface import create_teacher_interface
-from interface.admin_interface import create_student_interface
-from interface.admin_interface import show_info_interface
+from lib.tools import hash_md5, auth, show_school_list
+from interface import admin_interface
+from interface import common_interface
 
+
+# 记录当前登录用户
+current_user = {'name': None, 'role': 'Admin'}
 
 
 def register():
-    print('管理员注册页面'.center(50, '-'))
+    print('这是管理员注册页面'.center(30, '-'))
     while 1:
-        name = input('用户名：').strip()
-        pwd = input('密码：').strip()
-        re_pwd= input('确认密码：').strip()
-        if pwd != re_pwd:
-            print('两次密码输入不一致')
-            continue
-        flag, msg = register_interface(name, hash_md5(pwd))
+        name = input('请设置管理员名字：').strip()
+        flag, msg = admin_interface.register_interface(name)
         print(msg)
-        if flag: break
+        if flag:
+            break
 
 
 def login():
-    print('管理员登录页面'.center(50, '-'))
+    print('这是管理员登录页面'.center(30, '-'))
     while 1:
-        name = input('用户名：').strip()
-        pwd = input('密码：').strip()
-
-        flag, msg = login_interface(name, hash_md5(pwd))
+        name = input('请输入用户名：').strip()
+        pwd = input('请输入密码：').strip()
+        flag, msg = common_interface.login_interface(name, hash_md5(pwd), current_user['role'])
         print(msg)
-        if flag: break
-
-
-@auth
-def create_school():
-    print('创建学校页面'.center(50, '-'))
-    while 1:
-        sch_name = input('请输入学校名字：').strip()
-        sch_addr = input('请输入学校地址：').strip()
-        flag, msg = create_school_interface(sch_name, sch_addr)
-        print(msg)
-        if flag: break
-
-
-@auth
-def create_class():
-    print('创建班级页面'.center(50, '-'))
-    while 1:
-        sch_name = input('请选择班级所在学校：').strip()
-        class_name = input('请输入班级的名字：').strip()
-        flag, msg = create_class_interface(sch_name, class_name)
-        print(msg)
-        if flag: break
-
-
-@auth
-def create_course():
-    print('创建课程页面'.center(50, '-'))
-    while 1:
-        sch_name = input('请选择课程所在学校：').strip()
-        class_name = input('请选择课程所在班级：').strip()
-        course_name = input('请输入课程的名字：').strip()
-        period = input('请输入课程的周期：').strip()
-        price = input('请输入课程的价格：').strip()
-
-        flag, msg = create_course_interface(sch_name, class_name, course_name, period, price)
-        print(msg)
-        if flag: break
-
-
-@auth
-def create_teacher():
-    print('创建讲师页面'.center(50, '-'))
-    while 1:
-        sch_name = input('请选择讲师所在学校：').strip()
-        teacher_name = input('请输入讲师的名字：').strip()
-        level = input('请输入讲师的级别：').strip()
-        pwd = input('请设置讲师的密码：').strip()
-        re_pwd = input('请确认密码：').strip()
-        if pwd != re_pwd:
-            print('两次密码输入不一致')
-            continue
-        flag, msg = create_teacher_interface(sch_name, teacher_name, level, hash_md5(pwd))
-        print(msg)
-        if flag: break
-
-
-@auth
-def create_student():
-    print('创建学生页面'.center(50, '-'))
-    while 1:
-        sch_name = input('请选择学生所在学校：').strip()
-        class_name = input('请选择学生所在班级：').strip()
-        stu_name = input('请输入学生的名字：').strip()
-        age = input('请输入学生的年龄：').strip()
-        sex = input('请输入学生的性别：').strip()
-        pwd = input('请设置学生的密码：').strip()
-        re_pwd = input('请确认密码：').strip()
-        if pwd != re_pwd:
-            print('两次密码输入不一致')
-            continue
-        flag, msg = create_student_interface(sch_name, class_name, stu_name, age, sex, hash_md5(pwd))
-        print(msg)
-        if flag: break
-
-
-@auth
-def show_info():
-    info_dict = {
-        '1': ('校区信息', 'School'),
-        '2': ('班级信息', 'Class'),
-        '3': ('课程信息', 'Course'),
-        '4': ('讲师信息', 'Teacher'),
-        '5': ('学生信息', 'Student'),
-    }
-    while 1:
-        for k, v in info_dict.items():
-            print(k, v[0])
-
-        info = input('请选择查看的信息编号(Q返回)：').strip().lower()
-        if info == 'q': break
-        if info not in info_dict:
-            continue
-        cls_name = info_dict.get(info)[1]
-        flag, obj_list = show_info_interface(cls_name)
         if flag:
-            for obj in obj_list:
-                print(obj)
-        else:
-            print(f'{cls_name}不存在')
+            current_user['name'] = name
+            break
+
+
+@auth('admin')
+def create_school():
+    print('这是创建学校页面'.center(30, '-'))
+    while 1:
+        name = input('请设置学校名字(Q退出)：').strip().lower()
+        if name == 'q':
+            break
+        addr = input('请设置学校地址：').strip()
+        flag, msg = admin_interface.create_school_interface(name, addr, current_user['name'])
+        print(msg)
+        if flag:
+            break
+
+
+@auth('admin')
+def create_course():
+    print('这是创建课程页面'.center(30, '-'))
+    school_list = common_interface.get_school_list_interface()
+    while 1:
+        flag, school_name = show_school_list(school_list)
+        if not flag:
+            continue
+        # 学校存在时
+        course_name = input('请设置课程名称：').strip()
+        course_period = input('请设置课程周期(月)：').strip()
+        course_price = input('请设置课程价格(元)：').strip()
+        if not course_period.isdigit() or not course_price.isdigit():
+            print('课程周期和价格都是整数哦')
+            continue
+        msg = admin_interface.create_course_interface(
+            school_name, course_name, course_period, course_price, current_user['name'])
+        print(msg)
+        break
+
+
+@auth('admin')
+def create_teacher():
+    print('这是创建老师页面'.center(30, '-'))
+    while 1:
+        teacher_name = input('请设置老师姓名(Q退出)：').strip().lower()
+        if teacher_name == 'q':
+            break
+        flag, msg = admin_interface.create_teacher_interface(teacher_name, current_user['name'])
+        print(msg)
+        if flag:
+            break
+
+
+@auth('admin')
+def create_student():
+    print('这是创建学生页面'.center(30, '-'))
+    while 1:
+        stu_name = input('请设置学生姓名(Q退出)：').strip().lower()
+        if stu_name == 'q':
+            break
+        flag, msg = admin_interface.create_student_interface(stu_name, current_user['name'])
+        print(msg)
+        if flag:
+            break
+
+
+@auth('admin')
+def edit_password():
+    print('这是修改密码页面'.center(30, '-'))
+    while 1:
+        pwd = input('请输入原密码：').strip()
+        new_pwd = input('请设置新密码：').strip()
+        re_pwd = input('请确认密码：').strip()
+        if new_pwd != re_pwd:
+            print('确认密码与新密码不一致')
+            continue
+        flag, msg = common_interface.edit_pwd_interface(hash_md5(pwd), hash_md5(new_pwd), current_user)
+        print(msg)
+        if flag:
+            break
+
 
 
 def admin():
+    print('管理员视图层'.center(50, '-'))
     cmd_func = {
-        '1': ('登录', login),
-        '2': ('注册', register),
-        '3': ('查看信息', show_info),
-        '4': ('创建学校', create_school),
-        '5': ('创建班级', create_class),
-        '6': ('创建课程', create_course),
-        '7': ('创建老师', create_teacher),
-        '8': ('创建学生', create_student),
+        '1':('登录', login),
+        '2':('注册', register),
+        '3':('创建学校', create_school),
+        '4':('创建课程', create_course),
+        '5':('创建讲师', create_teacher),
+        '6':('创建学生', create_student),
+        # '7':('修改密码', edit_password),
     }
     while 1:
         for k, v in cmd_func.items():
-            print(f'\t({k}) {v[0]}', end='\t')
-
-        cmd = input('\n请选择功能编号(Q退出)：').strip().lower()
-        if cmd == 'q': break
-        if cmd not in cmd_func:
-            print('请选择合法的功能编号')
+            print(f'({k}) {v[0]}', end='\t')
+        choice = input('\n请选择功能的编号(Q退出)：').strip().lower()
+        if choice == 'q':
+            break
+        if choice not in cmd_func:
+            print('您选择的编号不存在，请重新选择')
             continue
-        func = cmd_func.get(cmd)[1]
-        func()
+        cmd = cmd_func.get(choice)[1]
+        cmd()
