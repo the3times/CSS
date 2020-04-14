@@ -1,106 +1,146 @@
-from lib.tools import hash_md5, auth, show_school_list
-from interface import admin_interface
-from interface import common_interface
+from lib.tools import hash_md5, is_none, auth, select_item
+from core.current_user import current_user
+from interface import admin_interface, common_interface
 
-
-# 记录当前登录用户
-current_user = {'name': None, 'role': 'Admin'}
-
-
-def register():
-    print('这是管理员注册页面'.center(30, '-'))
-    while 1:
-        name = input('请设置管理员名字：').strip()
-        flag, msg = admin_interface.register_interface(name)
-        print(msg)
-        if flag:
-            break
 
 
 def login():
-    print('这是管理员登录页面'.center(30, '-'))
+    print('这是登录页面'.center(50, '-'))
     while 1:
-        name = input('请输入用户名：').strip()
+        name = input('请输入用户名(Q退出)：').strip().lower()
+        if name == 'q':
+            break
         pwd = input('请输入密码：').strip()
-        flag, msg = common_interface.login_interface(name, hash_md5(pwd), current_user['role'])
+        if not is_none(name, pwd):
+            print('用户名或密码不能为空')
+            continue
+        flag, msg = admin_interface.login_interface(name, hash_md5(pwd))
         print(msg)
         if flag:
             current_user['name'] = name
+            current_user['role'] = 'Admin'
             break
 
 
-@auth('admin')
-def create_school():
-    print('这是创建学校页面'.center(30, '-'))
+
+def register():
+    print('这是注册页面'.center(50, '-'))
     while 1:
-        name = input('请设置学校名字(Q退出)：').strip().lower()
+        name = input('设置管理员名字(Q退出)：').strip().lower()
         if name == 'q':
             break
-        addr = input('请设置学校地址：').strip()
-        flag, msg = admin_interface.create_school_interface(name, addr, current_user['name'])
+        if not is_none(name):
+            print('用户名不能为空')
+            continue
+        age = input('设置管理员年龄：').strip()
+        if not age.isdigit():
+            print('年龄设置不合法')
+            continue
+        sex = input('设置管理员性别：').strip()
+        if sex not in ('male', 'female'):
+            print('性别必须是：male or female')
+            continue
+
+        flag, msg = admin_interface.register_interface(name, age, sex)
         print(msg)
         if flag:
             break
 
 
-@auth('admin')
-def create_course():
-    print('这是创建课程页面'.center(30, '-'))
-    school_list = common_interface.get_school_list_interface()
+@auth('Admin')
+def create_school():
+    print('创建学校页面'.center(50, '-'))
     while 1:
-        flag, school_name = show_school_list(school_list)
-        if not flag:
+        school_name = input('请设置学校名字(Q退出)：').strip().lower()
+        if school_name =='q':
+            break
+        school_addr = input('请设置学校地址：').strip()
+        if not is_none(school_name, school_addr):
+            print('学校名或地址不能为空')
             continue
-        # 学校存在时
-        course_name = input('请设置课程名称：').strip()
-        course_period = input('请设置课程周期(月)：').strip()
-        course_price = input('请设置课程价格(元)：').strip()
-        if not course_period.isdigit() or not course_price.isdigit():
-            print('课程周期和价格都是整数哦')
+        flag, msg = admin_interface.create_school_interface(
+            school_name, school_addr, current_user['name'])
+        print(msg)
+        if flag:
+            break
+
+
+@auth('Admin')
+def create_course():
+    print('创建课程页面'.center(50, '-'))
+    while 1:
+        school_list = common_interface.get_all_school_list()
+        success, school_name = select_item(school_list)
+        if not success:
+            break
+        course_name = input('请设置课程名(Q退出)：').strip().lower()
+        if course_name == 'q':
+            break
+        course_period = input('请设置课程周期：').strip()
+        course_price = input('请设置课程价格：').strip()
+        if not is_none(course_name, course_period, course_price):
+            print('课程名称，课程周期，课程价格不能为空')
             continue
-        msg = admin_interface.create_course_interface(
+        flag, msg = admin_interface.create_course_interface(
             school_name, course_name, course_period, course_price, current_user['name'])
         print(msg)
-        break
+        if flag:
+            break
 
 
-@auth('admin')
+
+@auth('Admin')
 def create_teacher():
-    print('这是创建老师页面'.center(30, '-'))
+    print('创建老师页面'.center(50, '-'))
     while 1:
-        teacher_name = input('请设置老师姓名(Q退出)：').strip().lower()
-        if teacher_name == 'q':
+        name = input('请输入老师名字(Q退出)：').strip().lower()
+        if name == 'q':
             break
-        flag, msg = admin_interface.create_teacher_interface(teacher_name, current_user['name'])
-        print(msg)
-        if flag:
-            break
-
-
-@auth('admin')
-def create_student():
-    print('这是创建学生页面'.center(30, '-'))
-    while 1:
-        stu_name = input('请设置学生姓名(Q退出)：').strip().lower()
-        if stu_name == 'q':
-            break
-        flag, msg = admin_interface.create_student_interface(stu_name, current_user['name'])
-        print(msg)
-        if flag:
-            break
-
-
-@auth('admin')
-def edit_password():
-    print('这是修改密码页面'.center(30, '-'))
-    while 1:
-        pwd = input('请输入原密码：').strip()
-        new_pwd = input('请设置新密码：').strip()
-        re_pwd = input('请确认密码：').strip()
-        if new_pwd != re_pwd:
-            print('确认密码与新密码不一致')
+        if not is_none(name):
+            print('用户名不能为空')
             continue
-        flag, msg = common_interface.edit_pwd_interface(hash_md5(pwd), hash_md5(new_pwd), current_user)
+        age = input('请输入老师年龄：').strip()
+        if not age.isdigit():
+            print('年龄设置不合法')
+            continue
+        sex = input('请输入老师性别：').strip()
+        if sex not in ('male', 'female'):
+            print('性别必须是：male or female')
+            continue
+        level = input('请输入老师级别：').strip()
+        flag, msg = admin_interface.create_teacher_interface(name, age, sex, level, current_user['name'])
+        print(msg)
+        if flag:
+            break
+
+
+
+@auth('Admin')
+def create_student():
+    print('创建学生页面'.center(50, '-'))
+    while 1:
+        school_list = common_interface.get_all_school_list()
+        success, school_name = select_item(school_list)
+        if not success:
+            break
+        name = input('请输入学生名字(Q退出)：').strip().lower()
+        if name == 'q':
+            break
+        age = input('请输入学生年龄：').strip()
+        if not age.isdigit():
+            print('年龄设置不合法')
+            continue
+        sex = input('请输入学生性别：').strip()
+        if sex not in ('male', 'female'):
+            print('性别必须是：male or female')
+            continue
+        homeland = input('请输入学生的籍贯：').strip()
+        if not is_none(name, homeland):
+            print('学生名或籍贯不能为空')
+            continue
+
+        flag, msg = admin_interface.create_student_interface(
+            name, age, sex, school_name, homeland, current_user['name'])
         print(msg)
         if flag:
             break
@@ -108,24 +148,23 @@ def edit_password():
 
 
 def admin():
-    print('管理员视图层'.center(50, '-'))
-    cmd_func = {
-        '1':('登录', login),
-        '2':('注册', register),
-        '3':('创建学校', create_school),
-        '4':('创建课程', create_course),
-        '5':('创建讲师', create_teacher),
-        '6':('创建学生', create_student),
-        # '7':('修改密码', edit_password),
+    print('这是管理员视图页面'.center(50, '-'))
+    func_dict = {
+        '1': ('登录', login),
+        '2': ('注册', register),
+        '3': ('创建学校', create_school),
+        '4': ('创建课程', create_course),
+        '5': ('创建老师', create_teacher),
+        '6': ('创建学生', create_student),
     }
     while 1:
-        for k, v in cmd_func.items():
+        for k, v in func_dict.items():
             print(f'({k}) {v[0]}', end='\t')
-        choice = input('\n请选择功能的编号(Q退出)：').strip().lower()
-        if choice == 'q':
+
+        func_choice = input('\n请输入选择的功能编号(Q退出)：').strip().lower()
+        if func_choice == 'q':
             break
-        if choice not in cmd_func:
-            print('您选择的编号不存在，请重新选择')
+        if func_choice not in func_dict:
             continue
-        cmd = cmd_func.get(choice)[1]
-        cmd()
+        func = func_dict.get(func_choice)[1]
+        func()

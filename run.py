@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-# created by X. Liu on 2020/4/13
+# created by X. Liu on 2020/4/14
 
-
-from core.css import css
+from core import css
 
 if __name__ == '__main__':
-    css()
+    css.css()

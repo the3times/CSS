@@ -12,11 +12,11 @@ def css():
     }
     while 1:
         for k, v in view_dict.items():
-            print(f'\t({k}) {v[0]}', end='\t')
-
-        your_viewer = input('\n请选择您的角色：').strip()
-        if your_viewer not in view_dict:
-            print('请选择合适的角色编号')
+            print(f'({k}) {v[0]}', end='\t')
+        view_choice = input('\n请输入您的角色编号(Q退出)：').strip().lower()
+        if view_choice == 'q':
+            exit()
+        if view_choice not in view_dict:
             continue
-        view = view_dict.get(your_viewer)[1]
-        view()
+        view_role = view_dict.get(view_choice)[1]
+        view_role()

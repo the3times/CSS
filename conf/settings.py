@@ -1,9 +1,11 @@
 import os
+from lib.tools import hash_md5
 
-# 项目根路径
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-# 用户数据库路径
+
+#数据库文件夹
 DB_USER_DIR = os.path.join(BASE_DIR, 'db')
 
-INIT_PWD = '123456'
+# 用户初始密码
+INIT_PWD = hash_md5('123456')

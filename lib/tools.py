@@ -2,29 +2,6 @@ import hashlib
 from functools import wraps
 
 
-def auth(role):
-    from core import admin, student, teacher
-    role_dict = {
-        'admin': admin,
-        'student': student,
-        'teacher': teacher,
-    }
-    def wrapper(func):
-        @wraps(func)
-        def inner(*args, **kwargs):
-            if role in role_dict:
-                if role_dict.get(role).current_user['name']:
-                    res = func(*args, **kwargs)
-                    return res
-                else:
-                    print('您没有登录不能使用此功能')
-            else:
-                print('您没有权限使用此功能')
-        return inner
-    return wrapper
-
-
-
 def hash_md5(info):
     m = hashlib.md5()
     m.update(info.encode('utf-8'))
@@ -32,40 +9,36 @@ def hash_md5(info):
     return m.hexdigest()
 
 
-def show_school_list(school_list):
-    if not school_list:
-        print('需要先创建学校再创建课程')
-        return False, None
-    print('校区列表'.center(10, '='))
-    for index, school in enumerate(school_list, 1):
-        print(f'({index}) {school}')
-    choice = input('请选择课程所在学校的编号：').strip()
-    if not choice.isdigit() or int(choice) not in range(1, len(school_list)+1):
-        print('请选择合法的学校编号')
-        return False, None
-    return True, school_list[int(choice) - 1]
+
+def is_none(*args):
+    return all(args)
 
 
 
-def show_course_list(course_list):
-    if not course_list:
-        print('目前没有课程，，，，')
-        return False, None
-    print('课程列表'.center(10, '='))
-    for index, school in enumerate(course_list, 1):
-        print(f'({index}) {school}')
-    choice = input('请选择课程的编号：').strip()
-    if not choice.isdigit() or int(choice) not in range(1, len(course_list)+1):
-        print('请选择合法的课程编号')
-        return False, None
-    return True, course_list[int(choice) - 1]
+def auth(role):
+    from core.current_user import current_user
+    def wrapper(func):
+        @wraps(func)
+        def inner(*args, **kwargs):
+            if current_user and current_user['role'] == role:
+                res = func(*args, **kwargs)
+                return res
+            else:
+                print('您未登录或没有该功能的使用权限')
+        return inner
+    return wrapper
 
 
-def show_student_list(student_info):
-    for index, student_info_tuple in enumerate(student_info, 1):
-        print(f'({index}) {student_info_tuple[0]} {student_info_tuple[1]}')
-    choice = input('请选择学生的编号：').strip()
-    if not choice.isdigit() or int(choice) not in range(1, len(student_info)+1):
-        print('请选择合法的学生编号')
-        return False, None
-    return True, student_info[int(choice) - 1][0]
+
+def select_item(info_list):
+    while 1:
+        for index, school in enumerate(info_list, 1):
+            print(index, school)
+        choice = input('请输入选择的编号(Q退出)：').strip().lower()
+        if choice == 'q':
+            return False, '返回'
+        if not choice.isdigit() or int(choice) not in range(1, len(info_list) + 1):
+            print('您输入的编号不存在')
+            continue
+        else:
+            return True, info_list[int(choice) - 1]
