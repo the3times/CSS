@@ -4,7 +4,7 @@ from db import models
 def register_interface(name, age, sex):
     admin_obj = models.Admin.get_obj(name)
     if admin_obj:
-       return False, '用户名已经存在'
+       return False, f'管理员[{name}]已经存在，无需再次创建'
     models.Admin(name, age, sex)
     return True, f'管理员:[{name}]创建成功'
 
@@ -16,12 +16,10 @@ def login_interface(name, pwd):
     :param pwd: 密码，密文
     :return:
     """
-    admin_obj = models.Admin.get_obj(name)
-    if not admin_obj:
-        return False, '用户名不存在'
-    if pwd != admin_obj.pwd:
-        return False, '用户名或密码错误'
-    return True, '登录成功'
+    from interface import common_interface
+    role = 'Admin'
+    flag, msg = common_interface.common_login_interface(name, pwd, role)
+    return flag, msg
 
 
 

@@ -1,46 +1,88 @@
 from core.current_user import current_user
+from lib.tools import menu_display, auth, is_none, hash_md5, select_item
+from interface import student_interface, common_interface
+
 
 
 def login():
-    pass
+    while 1:
+        name = input('请输入用户名：').strip()
+        if name == 'q':
+            break
+        pwd = input('请输入密码：').strip()
+        if is_none(name, pwd):
+            print('用户名或密码不能为空')
+            continue
+        flag, msg = student_interface.login_interface(name, hash_md5(pwd))
+        print(msg)
+        if flag:
+            current_user['name'] = name
+            current_user['role'] = 'Student'
+            break
 
 
-def select_school():
-    pass
-
-
+@auth('Student')
 def select_course():
-    pass
+    while 1:
+        school_name = student_interface.get_my_school_interface(current_user['name'])
+        flag, course_list = common_interface.get_course_list_from_school(school_name)
+        if not flag:
+            print(course_list)
+            break
+        print('待选课程列表'.center(30, '-'))
+        flag2, course_name = select_item(course_list)
+        if not flag2:
+            break
+        flag3, msg = student_interface.select_course_interface(course_name, current_user['name'])
+        print(msg)
 
 
-def pay_tuition():
-    pass
+@auth('Student')
+def check_my_course():
+    flag, course_list = student_interface.check_my_course_interface(current_user['name'])
+    if not flag:
+        print(course_list)
+        return
+    print('您已选课程列表'.center(30, '-'))
+    for index, course_name in enumerate(course_list, 1):
+        print(index, course_name)
 
 
+@auth('Student')
+def check_my_score():
+    flag, score_dict = student_interface.check_score_interface(current_user['name'])
+    if not flag:
+        print(score_dict)
+    else:
+        print('课程分数列表')
+        for index, course_name in enumerate(score_dict, 1):
+            score = score_dict[course_name]
+            print(index, course_name, score)
 
-def check_score():
-    pass
 
-
+@auth('Student')
+def edit_my_pwd():
+    while 1:
+        old_pwd = input('请输入旧密码：').strip()
+        new_pwd = input('请设置新密码：').strip()
+        re_pwd = input('请确认新密码：').strip()
+        if new_pwd != re_pwd:
+            print('两次密码输入不一致')
+            continue
+        flag, msg = common_interface.edit_pwd_interface(
+            hash_md5(old_pwd), hash_md5(new_pwd), current_user['name'], current_user['role'])
+        print(msg)
+        if flag:
+            break
 
 def student():
     print('这是学生视图页面'.center(50, '-'))
     func_dict = {
         '1': ('登录', login),
-        '2': ('选择校区', select_school),
-        '3': ('选择课程', select_course),
-        '4': ('课程缴费', pay_tuition),
-        '6': ('查看分数', check_score),
+        '2': ('选择课程', select_course),
+        '3':('我的课程', check_my_course),
+        '4': ('查看分数', check_my_score),
+        '5': ('修改密码', edit_my_pwd),
     }
-    while 1:
-        for k, v in func_dict.items():
-            print(f'({k}) {v[0]}', end='\t')
-
-        func_choice = input('请输入选择的功能编号(Q退出)：').strip().lower()
-        if func_choice == 'q':
-            break
-        if func_choice not in func_dict:
-            continue
-        func = func_dict.get(func_choice)[1]
-        func()
+    menu_display(func_dict)
 

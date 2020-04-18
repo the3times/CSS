@@ -2,7 +2,6 @@ from conf import settings
 from db import db_handle
 
 
-
 class FileMixin:
 
     @classmethod
@@ -13,7 +12,7 @@ class FileMixin:
         db_handle.save_obj(self)
 
 
-class Human():
+class Human:
     def __init__(self, name, age, sex):
         self.name = name
         self.age = age
@@ -21,7 +20,12 @@ class Human():
         self.__pwd = settings.INIT_PWD
         self.role = self.__class__.__name__
 
-    def edit_password(self, new_pwd):
+    @property
+    def pwd(self):
+        return self.__pwd
+
+    @pwd.setter
+    def pwd(self, new_pwd):
         self.__pwd = new_pwd
 
 
@@ -49,11 +53,6 @@ class Admin(FileMixin, Human):
         pass
 
 
-    def edit_password(self, new_pwd):
-        super().edit_password(new_pwd)
-        self.save_obj()
-
-
 
 class School(FileMixin):
     def __init__(self, name, addr):
@@ -77,16 +76,13 @@ class Course(FileMixin):
         self.student_list = []
         self.save_obj()
 
-
     def relate_teacher(self, teacher_name):
         self.teacher = teacher_name
         self.save_obj()
 
-
     def relate_student(self, stu_name):
         self.student_list.append(stu_name)
         self.save_obj()
-
 
 
 class Teacher(FileMixin, Human):
@@ -96,17 +92,24 @@ class Teacher(FileMixin, Human):
         self.course_list = []
         self.save_obj()
 
-    def edit_password(self, new_pwd):
-        super().edit_password(new_pwd)
-        self.save_obj()
-
     def select_course(self, course_name):
         self.course_list.append(course_name)
         self.save_obj()
+        course_obj = Course.get_obj(course_name)
+        course_obj.relate_teacher(self.name)
+
 
     def check_my_courses(self):
         return self.course_list
 
+    def check_my_student(self, course_name):
+        course_obj = Course.get_obj(course_name)
+        return course_obj.student_list
+
+    def set_score(self, stu_name, course_name, score):
+        stu_obj = Student.get_obj(stu_name)
+        stu_obj.score_dict[course_name] = int(score)
+        stu_obj.save_obj()
 
 
 
@@ -119,9 +122,19 @@ class Student(FileMixin, Human):
         self.score_dict = {}
         self.save_obj()
 
-
-    def edit_password(self, new_pwd):
-        super().edit_password(new_pwd)
+    def select_course(self, course_name):
+        self.course_list.append(course_name)
+        self.score_dict[course_name] = None
         self.save_obj()
+        course_obj = Course.get_obj(course_name)
+        course_obj.relate_student(self.name)
+
+    def check_my_course(self):
+        return self.course_list
+
+    def check_my_score(self):
+        return self.score_dict
+
+
 
 

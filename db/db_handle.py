@@ -16,8 +16,6 @@ def get_obj(cls, obj_name):
             return pickle.load(f)
 
 
-
-
 def save_obj(obj):
     """
     保存对象（覆盖重写的方式）

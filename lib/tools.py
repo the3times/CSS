@@ -9,14 +9,19 @@ def hash_md5(info):
     return m.hexdigest()
 
 
-
 def is_none(*args):
-    return all(args)
+    """
+    存在空字符串，就返回True
+    :param args:
+    :return:
+    """
+    return False if all(args) else True
 
 
 
 def auth(role):
     from core.current_user import current_user
+
     def wrapper(func):
         @wraps(func)
         def inner(*args, **kwargs):
@@ -29,8 +34,12 @@ def auth(role):
     return wrapper
 
 
-
 def select_item(info_list):
+    """
+    枚举展示数据列表，并支持用户数据编号返回编号对应的数据，支持编号合法校验
+    :param info_list:
+    :return:
+    """
     while 1:
         for index, school in enumerate(info_list, 1):
             print(index, school)
@@ -42,3 +51,22 @@ def select_item(info_list):
             continue
         else:
             return True, info_list[int(choice) - 1]
+
+
+def menu_display(menu_dict):
+    """
+    展示功能字典，然用户选择使用
+    :param menu_dict:
+    :return:
+    """
+    while 1:
+        for k, v in menu_dict.items():
+            print(f'({k}) {v[0]}', end='\t')
+
+        func_choice = input('\n请输入选择的功能编号(Q退出)：').strip().lower()
+        if func_choice == 'q':
+            break
+        if func_choice not in menu_dict:
+            continue
+        func = menu_dict.get(func_choice)[1]
+        func()
