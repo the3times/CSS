@@ -22,7 +22,6 @@ def login_interface(name, pwd):
     return flag, msg
 
 
-
 def create_school_interface(school_name, school_addr, admin_name):
     school_obj = models.School.get_obj(school_name)
     if school_obj:
@@ -58,3 +57,13 @@ def create_student_interface(stu_name, stu_age, stu_sex, school_name, homeland, 
     admin_obj = models.Admin.get_obj(admin_name)
     admin_obj.create_student(stu_name, stu_age, stu_sex, school_name, homeland)
     return True, f'学生:[{stu_name}]创建成功'
+
+
+def reset_user_pwd_interface(name, role, admin_name):
+    admin_obj = models.Admin.get_obj(admin_name)
+    if hasattr(models, role):
+        user_obj = getattr(models, role).get_obj(name)
+        if not user_obj:
+            return False, '用户不存在'
+        admin_obj.reset_user_pwd(name, role)
+        return True, '密码重置成功【123456】，请尽快修改'

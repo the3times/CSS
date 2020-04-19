@@ -25,7 +25,6 @@ def get_course_list_from_school(school_name):
     return True, course_list
 
 
-
 def common_login_interface(name, pwd, role):
     """
     登录接口
@@ -43,7 +42,6 @@ def common_login_interface(name, pwd, role):
         return True, '登录成功'
     else:
         return False, '您没有权限登录'
-
 
 
 def edit_pwd_interface(old_pwd, new_pwd, name, role):

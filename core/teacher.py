@@ -1,12 +1,12 @@
 from core.current_user import current_user
-from lib.tools import auth, menu_display, is_none, hash_md5, select_item
+from lib.tools import auth, menu_display, is_none, hash_md5, select_item, edit_pwd
 from interface import teacher_interface, common_interface
 
 
 def login():
     while 1:
         print('老师登录页面'.center(50, '-'))
-        name = input('请输入用户名(Q退出)：').strip()
+        name = input('请输入用户名(Q退出)：').strip().lower()
         if name == 'q':
             break
         pwd = input('请输入密码：').strip()
@@ -101,21 +101,9 @@ def set_score_for_student():
             print('打分成功')
 
 
-
 @auth('Teacher')
 def edit_my_pwd():
-    while 1:
-        old_pwd = input('请输入旧密码：').strip()
-        new_pwd = input('请设置新密码：').strip()
-        re_pwd = input('请确认新密码：').strip()
-        if new_pwd != re_pwd:
-            print('两次密码输入不一致')
-            continue
-        flag, msg = common_interface.edit_pwd_interface(
-            hash_md5(old_pwd), hash_md5(new_pwd), current_user['name'], current_user['role'])
-        print(msg)
-        if flag:
-            break
+    edit_pwd(common_interface.edit_pwd_interface, current_user)
 
 
 def teacher():

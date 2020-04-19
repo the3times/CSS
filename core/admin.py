@@ -1,4 +1,4 @@
-from lib.tools import hash_md5, is_none, auth, select_item, menu_display
+from lib.tools import hash_md5, is_none, auth, select_item, menu_display, edit_pwd
 from core.current_user import current_user
 from interface import admin_interface, common_interface
 
@@ -144,15 +144,20 @@ def create_student():
 
 @auth('Admin')
 def edit_my_pwd():
+    edit_pwd(common_interface.edit_pwd_interface, current_user)
+
+
+@auth('Admin')
+def reset_user_pwd():
     while 1:
-        old_pwd = input('请输入旧密码：').strip()
-        new_pwd = input('请设置新密码：').strip()
-        re_pwd = input('请确认新密码：').strip()
-        if new_pwd != re_pwd:
-            print('两次密码输入不一致')
+        name = input('请输入用户名字：').strip().lower()
+        if name == 'q':
+            break
+        role = input('请输入用户角色：').strip()
+        if role not in ['Student', 'Teacher', 'Admin']:
+            print('用户角色不存在')
             continue
-        flag, msg = common_interface.edit_pwd_interface(
-            hash_md5(old_pwd), hash_md5(new_pwd), current_user['name'], current_user['role'])
+        flag, msg = admin_interface.reset_user_pwd_interface(name, role, current_user['name'])
         print(msg)
         if flag:
             break
@@ -168,5 +173,6 @@ def admin():
         '5': ('创建老师', create_teacher),
         '6': ('创建学生', create_student),
         '7': ('修改密码', edit_my_pwd),
+        '8': ('重置密码', reset_user_pwd),
     }
     menu_display(func_dict)

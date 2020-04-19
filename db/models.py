@@ -1,3 +1,4 @@
+import sys
 from conf import settings
 from db import db_handle
 
@@ -29,29 +30,33 @@ class Human:
         self.__pwd = new_pwd
 
 
-
-
 class Admin(FileMixin, Human):
 
     def __init__(self, name, age, sex):
         super().__init__(name, age, sex)
         self.save_obj()
 
-    def create_school(self, school_name, school_addr):
+    @staticmethod
+    def create_school(school_name, school_addr):
         School(school_name, school_addr)
 
-    def create_course(self, school_name, course_name, course_period, course_price):
+    @staticmethod
+    def create_course(school_name, course_name, course_period, course_price):
         Course(course_name, course_period, course_price, school_name)
 
-    def create_teacher(self, teacher_name, teacher_age, teacher_sex, teacher_level):
+    @staticmethod
+    def create_teacher(teacher_name, teacher_age, teacher_sex, teacher_level):
         Teacher(teacher_name, teacher_age, teacher_sex, teacher_level)
 
-    def create_student(self, stu_name, stu_age, stu_sex, school_name, homeland):
+    @staticmethod
+    def create_student(stu_name, stu_age, stu_sex, school_name, homeland):
         Student(stu_name, stu_age, stu_sex, school_name, homeland)
 
-    def reset_user_pwd(self, name, role):
-        pass
-
+    @staticmethod
+    def reset_user_pwd(name, role):
+        obj = getattr(sys.modules[__name__], role).get_obj(name)
+        obj.pwd = settings.INIT_PWD
+        obj.save_obj()
 
 
 class School(FileMixin):
@@ -98,19 +103,19 @@ class Teacher(FileMixin, Human):
         course_obj = Course.get_obj(course_name)
         course_obj.relate_teacher(self.name)
 
-
     def check_my_courses(self):
         return self.course_list
 
-    def check_my_student(self, course_name):
+    @staticmethod
+    def check_my_student(course_name):
         course_obj = Course.get_obj(course_name)
         return course_obj.student_list
 
-    def set_score(self, stu_name, course_name, score):
+    @staticmethod
+    def set_score(stu_name, course_name, score):
         stu_obj = Student.get_obj(stu_name)
         stu_obj.score_dict[course_name] = int(score)
         stu_obj.save_obj()
-
 
 
 class Student(FileMixin, Human):
@@ -134,7 +139,3 @@ class Student(FileMixin, Human):
 
     def check_my_score(self):
         return self.score_dict
-
-
-
-

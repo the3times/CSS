@@ -70,3 +70,18 @@ def menu_display(menu_dict):
             continue
         func = menu_dict.get(func_choice)[1]
         func()
+
+
+def edit_pwd(your_interface, current_user):
+    while 1:
+        old_pwd = input('请输入旧密码：').strip()
+        new_pwd = input('请设置新密码：').strip()
+        re_pwd = input('请确认新密码：').strip()
+        if new_pwd != re_pwd:
+            print('两次密码输入不一致')
+            continue
+        flag, msg = your_interface(
+            hash_md5(old_pwd), hash_md5(new_pwd), current_user['name'], current_user['role'])
+        print(msg)
+        if flag:
+            break
