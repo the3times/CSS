@@ -1,5 +1,5 @@
 import os
-from lib.tools import hash_md5
+from lib.tools import ToolsMixin
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
@@ -8,4 +8,4 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 DB_USER_DIR = os.path.join(BASE_DIR, 'db')
 
 # 用户初始密码
-INIT_PWD = hash_md5('123456')
+INIT_PWD = ToolsMixin().hash_md5('123456')
