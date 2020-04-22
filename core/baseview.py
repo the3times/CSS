@@ -72,7 +72,7 @@ class BaseViewer:
 
     def login(self, role_interface):
         while 1:
-            print('老师登录页面'.center(50, '-'))
+            print('登录页面'.center(50, '-'))
             name = input('请输入用户名(Q退出)：').strip().lower()
             if name == 'q':
                 break
@@ -83,5 +83,5 @@ class BaseViewer:
             flag, msg = role_interface.login_interface(name, self.hash_md5(pwd))
             print(msg)
             if flag:
-                self.name = name
+                BaseViewer.name = name
                 break

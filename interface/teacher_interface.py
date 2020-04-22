@@ -31,6 +31,7 @@ def check_my_student_interface(course_name, teacher_name):
         return False, f'课程: {course_name} 没有学生选呀'
     return True, student_list
 
+
 def set_score_interface(stu_name, course_name, score, teacher_name, ):
     teacher_obj = models.Teacher.get_obj(teacher_name)
     teacher_obj.set_score(stu_name, course_name, score)
